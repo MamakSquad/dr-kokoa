@@ -96,7 +96,7 @@ def detect_text_endpoint():
         print("Text Succesfully Detected")
 
         # Store the extracted information in Firestore
-        db.collection("medication_records").add(extracted_info)
+        db.collection("users").document(user_uid).collection("medication_records").document()
         print("Medicine Info Successfully Stored")
 
         # Return the extracted information as JSON
