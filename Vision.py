@@ -3,6 +3,7 @@ import json
 from google.cloud import vision
 from google.oauth2 import service_account
 from flask import Flask, jsonify, request
+from Main import db
 
 app = Flask(__name__)
 
@@ -43,28 +44,29 @@ class VisionAPI:
 
         lines = text.split("\n")
 
-        for i, line in enumerate(lines):
+        for line in lines:
             line = line.strip().lower()
 
-            # Detect patient name (assumption: it starts with "Patient:" or similar keywords)
+            # Detect patient name
             if "patient" in line or "name" in line:
                 extracted_info["patient_name"] = line.split(":")[-1].strip()
             
-            # Detect medicine name (assumption: it contains 'mg', 'tablet', or 'capsule')
+            # Detect medicine name
             elif "mg" in line or "tablet" in line or "capsule" in line:
                 extracted_info["medicine_name"] = line.strip()
 
-            # Detect amount and frequency (e.g., "Ambil 2 biji 3 kali sehari")
+            # Detect amount and frequency
             elif "ambil" in line and "biji" in line:
                 words = line.split()
                 extracted_info["amount"] = words[words.index("biji") - 1]  # Extract amount
                 extracted_info["frequency"] = " ".join(words[words.index("biji") + 1:])  # Extract frequency
 
-            # Detect description: Combine relevant lines
+            # Detect description
             elif "sebelum" in line or "selepas" in line:
-                extracted_info["description"] = line.strip()  # Set description
+                extracted_info["description"] = line.strip()
 
-        return extracted_info["patient_name"], extracted_info["medicine_name"], extracted_info["amount"], extracted_info["frequency"], extracted_info["description"]
+        return extracted_info
+
 
 # Create VisionAPI instance
 vision_api = VisionAPI()
@@ -77,20 +79,21 @@ def detect_text_endpoint():
     # Save the image temporarily to process
     image_path = 'temp_image.jpg'
     image.save(image_path)
+    print("Image received!")
 
     try:
         # Call the detect_text function
         text = vision_api.detect_text(image_path)
-        patient_name, medicine_name, amount, frequency, description = vision_api.extract_info(text)
+        extracted_info = vision_api.extract_info(text)
+        print("Text Succesfully Detected")
+
+        # Store the extracted information in Firestore
+        db.collection("medication_records").add(extracted_info)
+        print("Medicine Info Successfully Stored")
 
         # Return the extracted information as JSON
-        return jsonify({
-            "patient_name": patient_name,
-            "medicine_name": medicine_name,
-            "amount": amount,
-            "frequency": frequency,
-            "description": description
-        })
+        return jsonify(extracted_info)
+
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
