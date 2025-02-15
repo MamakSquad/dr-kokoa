@@ -3,7 +3,15 @@ import json
 from google.cloud import vision
 from google.oauth2 import service_account
 from flask import Flask, jsonify, request
-from Main import db
+from firebase_admin import auth, firestore, credentials, initialize_app
+
+
+# Initialize Firebase
+cred = credentials.Certificate("C:/Users/iskan/OneDrive/Desktop/API KEYS/dr-kokua-firebase-adminsdk-fbsvc-b63dcc4b93.json")
+initialize_app(cred)
+
+# Firestore client
+db = firestore.client()
 
 app = Flask(__name__)
 
