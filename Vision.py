@@ -10,7 +10,7 @@ app = Flask(__name__)
 class VisionAPI:
     def __init__(self):
         # Load credentials from file
-        credential_path = "C:/Users/iskan/OneDrive/Desktop/API KEYS/vision_key.json"
+        credential_path = "./vision_key.json"
         with open(credential_path, "r") as cred_file:
             credentials_json = json.load(cred_file)
 
@@ -96,4 +96,4 @@ def detect_text_endpoint():
 
 # Run the Flask app
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0')
