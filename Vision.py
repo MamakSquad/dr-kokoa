@@ -4,8 +4,6 @@ from google.cloud import vision
 from google.oauth2 import service_account
 from flask import Flask, jsonify, request
 
-app = Flask(__name__)
-
 # Initialize Google Vision Client
 class VisionAPI:
    
@@ -59,15 +57,3 @@ class VisionAPI:
 pass
 
 
-
-# Run the Flask app
-if __name__ == '__main__':
-    app.run(host='0.0.0.0')
-"""""
-    print("\nExtracted Information:")
-    print(f"Patient Name: {data["patient_name"]}")
-    print(f"Medicine Name: {data["medicine_name"]}")
-    print(f"Amount to Consume: {data["amount"]} biji")
-    print(f"Frequency: {data["frequency"]}")
-    print(f"Description: {data[{"description"}]}")
-"""""
