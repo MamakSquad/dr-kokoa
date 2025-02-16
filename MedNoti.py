@@ -8,7 +8,6 @@ import sys
 import firebase_admin
 from firebase_admin import credentials, firestore
 
-
 # Initialize Firebase Admin SDK
 cred = credentials.Certificate("C:/Users/iskan/OneDrive/Desktop/API KEYS/dr-kokua-firebase-adminsdk-fbsvc-b63dcc4b93.json")  # Replace with your service account key path
 firebase_admin.initialize_app(cred)
@@ -17,8 +16,8 @@ firebase_admin.initialize_app(cred)
 db = firestore.client()
 
 sound_file = r"C:\Users\iskan\OneDrive\Desktop\API KEYS\WhatsApp Audio 2025-02-15 at 00.03.08_c019a86b.mp3"
-class NotiMed:
-    
+
+class NotiMed:    
 
     def get_user_time():
         """Prompts the user to input a target time and validates it."""
@@ -117,6 +116,6 @@ class NotiMed:
                 break  
 
             time.sleep(1)  
-
+    pass
     # When the user chooses number 1 (View Running Alarm):
     
