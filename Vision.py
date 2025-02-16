@@ -4,7 +4,7 @@ from google.cloud import vision
 from google.oauth2 import service_account
 from flask import Flask, jsonify, request
 from firebase_admin import auth, firestore, credentials, initialize_app
-
+from Main import db
 
 # Initialize Firebase
 cred = credentials.Certificate("./dr-kokua-firebase-adminsdk-fbsvc-b63dcc4b93.json")
