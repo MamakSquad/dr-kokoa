@@ -22,7 +22,7 @@ class UserLogin:
         try:
             user_record = auth.create_user(email=email, password=password, phone_number=phone_number)
             uid = user_record.uid  # Firebase UID
-
+            print("New User Successful")
             # Generate a unique family token
             family_token = str(uuid.uuid4())
 
