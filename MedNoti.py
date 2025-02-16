@@ -7,7 +7,7 @@ import os
 import sys
 import firebase_admin
 from firebase_admin import credentials, firestore
-from Main import db
+
 
 # Initialize Firebase Admin SDK
 cred = credentials.Certificate("C:/Users/iskan/OneDrive/Desktop/API KEYS/dr-kokua-firebase-adminsdk-fbsvc-b63dcc4b93.json")  # Replace with your service account key path
