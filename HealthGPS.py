@@ -2,7 +2,6 @@ import geocoder
 import googlemaps
 import webbrowser
 import os
-
 class HealthNavi:
     def __init__(self):
         self.api_key = "AIzaSyC2KPlLyT24z1HObpzeL69_NCSIwC1aU5U"  
@@ -70,6 +69,7 @@ class HealthNavi:
                     print("Invalid choice. Please enter a number from the list.")
             except ValueError:
                 print("Invalid input. Please enter a valid number.")
+pass
 
 # Example usage
 if __name__ == "__main__":
