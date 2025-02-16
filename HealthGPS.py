@@ -2,7 +2,6 @@ import geocoder
 import googlemaps
 import webbrowser
 import os
-from Main import db
 
 class HealthNavi:
     def __init__(self):
