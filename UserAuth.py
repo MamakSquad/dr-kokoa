@@ -2,7 +2,7 @@ import firebase_admin
 from firebase_admin import credentials, auth, firestore
 import uuid
 import requests
-from Main import db
+
 
 # Initialize Firebase only once
 cred = credentials.Certificate("C:/Users/iskan/OneDrive/Desktop/API KEYS/dr-kokua-firebase-adminsdk-fbsvc-b63dcc4b93.json")
