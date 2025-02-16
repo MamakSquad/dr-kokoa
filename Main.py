@@ -10,6 +10,8 @@ from datetime import datetime
 from plyer import notification
 from playsound import playsound
 from MedNoti import NotiMed
+import sys
+sound_file = r"C:\Users\iskan\OneDrive\Desktop\API KEYS\WhatsApp Audio 2025-02-15 at 00.03.08_c019a86b.mp3"
 
 # UserAuth
 import firebase_admin
@@ -24,7 +26,6 @@ import json
 from google.cloud import vision
 from google.oauth2 import service_account
 from Vision import VisionAPI
-
 
 # Flask
 from flask import Flask, jsonify, request
@@ -97,19 +98,75 @@ def navigate_to_healthcare():
 # -------------------------- MedNoti --------------------------
 
 def get_alarm_times(frequency):
-    return ["08:00", "14:00", "20:00"]  # Example times
+        alarm_times = []
+
+        # If the frequency mentions "pagi", set alarm at 9 AM
+        if 'pagi' in frequency:
+            alarm_times.append("09:00")
+        
+        # If the frequency mentions "tengah hari", set alarm at 12 PM
+        if 'tengah hari' in frequency or '1 kali' in frequency:
+            alarm_times.append("12:00")
+        
+        # If the frequency mentions "petang", set alarm at 4 PM
+        if 'petang' in frequency or '3 kali' in frequency:
+            alarm_times.append("16:00")
+        
+        # If the frequency mentions "malam", set alarm at 9 PM
+        if 'malam' in frequency or '2 kali' in frequency or '4 kali' in frequency:
+            alarm_times.append("21:00")
+        
+        return alarm_times
 
 def save_alarms_to_db(user_uid, medicine_name, amount, description, alarm_times):
-    db.collection("users").document(user_uid).collection("alarms").add({
-        "medicine_name": medicine_name,
-        "amount": amount,
-        "description": description,
-        "alarm_times": alarm_times,
-        "status": "active"
-    })
+        # Save alarm information to Firestore
+        doc_ref = db.collection("users").document(user_uid).collection("alarms").document()
+        doc_ref.set({
+            "medicine_name": medicine_name,
+            "amount": amount,
+            "description": description,
+            "alarm_times": alarm_times,
+            "status": "active"  # Track the alarm status (active or inactive)
+        })
+def check_time(target_datetime, medicine_name, amount, description):
+        """Waits until the target time and then sends a notification + plays sound."""
+        print(f"Waiting for {target_datetime}...")
 
-def check_time(alarm_time, medicine_name, amount, description):
-    print(f"Alarm set for {alarm_time} - {medicine_name} ({amount}) {description}")
+        while True:
+            current_time = datetime.now()
+            print(f"Current time: {current_time}", end="\r")  
+
+            if current_time >= target_datetime:
+                print(f"\nAlert! It's time: {current_time}")
+                
+                # Show desktop notification
+                try:
+                    notification.notify(
+                        title=f"Time for {medicine_name}",
+                        message=f"Take {amount} of {medicine_name} ({description}) at {current_time.strftime('%Y-%m-%d %H:%M')}",
+                        timeout=10
+                    )
+                    print("Notification sent!")
+                except Exception as e:
+                    print(f"Error sending notification: {e}")
+
+                # Play sound
+                if os.path.exists(sound_file):
+                    try:
+                        playsound(sound_file)
+                        print("Sound played successfully!")
+                    except Exception as e:
+                        print(f"Error playing sound: {e}")
+                        if sys.platform.startswith("win"):
+                            import winsound
+                            winsound.PlaySound(sound_file, winsound.SND_FILENAME)
+                            print("Played sound using winsound (Windows only).")
+                else:
+                    print(f"Sound file not found: {sound_file}")
+
+                break  
+
+            time.sleep(1) 
 
 @app.route('/set-alarm', methods=['POST'])
 def set_alarm():
@@ -133,6 +190,38 @@ def set_alarm():
         check_time(alarm_time, medicine_name, amount, description)
 
     return jsonify({"message": "Alarms set successfully."})
+
+@app.route('/view-alarms', methods=['GET'])
+def view_alarms():
+    user_uid = request.args.get("user_uid")
+
+    if not user_uid:
+        return jsonify({"error": "Missing user UID"}), 400
+
+    active_alarms = NotiMed.get_active_alarms(user_uid)
+
+    if not active_alarms:
+        return jsonify({"message": "No active alarms found."})
+
+    return jsonify({"active_alarms": active_alarms})
+
+@app.route('/check-alarm', methods=['POST'])
+def check_alarm():
+    data = request.get_json()
+    user_uid = data.get("user_uid")
+    medicine_name = data.get("medicine_name")
+    target_time = data.get("target_time")  # Expected format: "HH:MM"
+
+    if not all([user_uid, medicine_name, target_time]):
+        return jsonify({"error": "Missing required fields"}), 400
+
+    alarm_time = datetime.strptime(target_time, "%H:%M").replace(
+        year=datetime.now().year, month=datetime.now().month, day=datetime.now().day
+    )
+
+    NotiMed.check_time(alarm_time, medicine_name, "1 dose", "Take with water")
+
+    return jsonify({"message": f"Checked alarm for {medicine_name} at {target_time}."})
 
 # -------------------------- UserAuth --------------------------
 
@@ -187,34 +276,7 @@ def login_user():
         return jsonify({"message": "Login successful", "user_id": data["localId"], "id_token": data["idToken"]})
     except Exception as e:
         return jsonify({"error": str(e)}), 400
-
-# -------------------------- Vision --------------------------
-
-@app.route("/detect-text", methods=["POST"])
-def detect_text():
-    data = request.get_json()
-    user_uid = data.get("user_uid")
-    image_path = data.get("image_path")
-
-    if not all([user_uid, image_path]) or not os.path.exists(image_path):
-        return jsonify({"error": "Invalid user UID or image path"}), 400
-
-    try:
-        detected_texts = vision_api.detect_text(image_path)
-        patient_name, medicine_name, amount, frequency, description = vision_api.extract_info(detected_texts)
-
-        db.collection("users").document(user_uid).collection("medication_records").add({
-            "patient_name": patient_name,
-            "medicine_name": medicine_name,
-            "amount": amount,
-            "frequency": frequency,
-            "description": description,
-            "image_path": image_path
-        })
-
-        return jsonify({"message": "Text detected and data stored successfully"})
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+pass
 
 if __name__ == "__main__":
     app.run(debug=True)
