@@ -42,7 +42,7 @@ app = Flask(__name__)
 
 # Set Firebase API Key (Ensure this is securely stored in env variables)
 FIREBASE_WEB_API_KEY = "AIzaSyDk3xnBChVjyUgKAaVf74LB6twVyrwdcbs"
-
+Vision_API_KEY = "AIzaSyC2KPlLyT24z1HObpzeL69_NCSIwC1aU5U"
 # Initialize Vision API
 vision_api = VisionAPI()
 
